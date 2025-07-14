@@ -1,0 +1,15 @@
+flask
+pymupdf
+python-dotenv
+
+
+# LangChain Core
+langchain
+langchain-core
+langchain-community
+langchain-experimental
+langchain-chroma
+
+# Google Gemini (PaLM) Integration
+langchain-google-genai
+google-generativeai

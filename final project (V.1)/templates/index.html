@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>ChatWithPDF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chatScrollWrapper {
+      flex-grow: 1;
+      overflow-y: auto;
+      width: 100%;
+    }
+    #chatBoxInner {
+      max-width: 768px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-black text-white flex flex-col min-h-screen">
+
+  <!-- Title Bar -->
+  <div class="bg-gray-900 p-4 shadow-md flex justify-center items-center text-xl font-semibold border-b border-gray-700">
+    Eva
+  </div>
+
+  <main>
+    <!-- Upload Section -->
+    <div id="uploadWrapper" class="flex justify-center items-center py-6 transition-opacity duration-300">
+      <form id="uploadForm" class="flex flex-col items-center gap-2">
+        <label for="pdfFile" class="cursor-pointer">
+          <div id="uploadCircle"
+               class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center shadow-lg transition-all duration-300 text-xl">
+            +
+          </div>
+        </label>
+        <input type="file" id="pdfFile" accept="application/pdf" class="hidden" />
+        <p id="uploadStatus" class="text-sm mt-2"></p>
+      </form>
+    </div>
+
+    <!-- Chat Scroll Wrapper (hidden until PDF upload) -->
+    <div id="chatScrollWrapper"
+         class="hidden flex-grow w-full overflow-y-auto">
+      <div id="chatBoxInner">
+        <div id="chatBox" class="space-y-4"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Input Bar -->
+  <div class="w-full max-w-3xl mx-auto border-t border-gray-700 p-4">
+    <form id="chatForm" class="flex gap-2">
+      <input id="userInput"
+             placeholder="Ask something from PDF..."
+             class="flex-grow px-4 py-2 bg-gray-800 text-white rounded-full"
+             disabled />
+      <button type="submit"
+              class="bg-gray-600 px-4 py-2 rounded-full text-white"
+              disabled>
+        Send
+      </button>
+    </form>
+  </div>
+
+  <script>
+    let pdfUploaded = false;
+
+    const pdfFile = document.getElementById('pdfFile');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadCircle = document.getElementById('uploadCircle');
+    const uploadWrapper = document.getElementById('uploadWrapper');
+    const chatScrollWrapper = document.getElementById('chatScrollWrapper');
+    const chatBox = document.getElementById('chatBox');
+    const chatForm = document.getElementById('chatForm');
+    const input = document.getElementById('userInput');
+    const sendBtn = chatForm.querySelector('button');
+
+    pdfFile.addEventListener('change', async () => {
+      const file = pdfFile.files[0];
+      if (!file) return;
+
+      // show uploading state
+      uploadCircle.classList.replace('bg-blue-600', 'bg-yellow-500');
+      uploadStatus.textContent = 'Uploading…';
+      uploadStatus.className = 'text-yellow-400 text-sm mt-2';
+
+      // send file to backend
+      const formData = new FormData();
+      formData.append('pdf', file);
+
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (res.ok) {
+        // success state
+        uploadCircle.classList.replace('bg-yellow-500', 'bg-green-600');
+        uploadStatus.textContent = data.message;
+        uploadStatus.className = 'text-green-400 text-sm mt-2';
+
+        pdfUploaded = true;
+        uploadWrapper.style.opacity = '0.2';
+        chatScrollWrapper.classList.remove('hidden');
+        input.disabled = false;
+        sendBtn.disabled = false;
+      } else {
+        // error state
+        uploadCircle.classList.replace('bg-yellow-500', 'bg-red-600');
+        uploadStatus.textContent = data.error || 'Upload failed';
+        uploadStatus.className = 'text-red-400 text-sm mt-2';
+      }
+    });
+
+    // allow hover-reveal if you want to swap PDF
+    uploadCircle.addEventListener('mouseenter', () => {
+      if (pdfUploaded) {
+        uploadWrapper.style.opacity = '1';
+      }
+    });
+    uploadCircle.addEventListener('mouseleave', () => {
+      if (pdfUploaded) {
+        uploadWrapper.style.opacity = '0.2';
+      }
+    });
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+
+      // echo user
+      const userMsg = document.createElement('div');
+      userMsg.className = 'text-right';
+      userMsg.innerHTML = `<div class="inline-block bg-gray-800 px-4 py-2 rounded-2xl">${message}</div>`;
+      chatBox.appendChild(userMsg);
+      input.value = '';
+      sendBtn.disabled = true;
+
+      // call chat endpoint
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      const ai_response = data.response;
+
+      // show bot reply
+      const botMsg = document.createElement('div');
+      botMsg.className = 'text-left';
+      botMsg.innerHTML = `<div class="inline-block bg-gray-700 px-4 py-2 rounded-2xl"> ${ai_response}</div>`;
+      chatBox.appendChild(botMsg);
+
+      sendBtn.disabled = false;
+      setTimeout(() => {
+        botMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 50);
+    });
+  </script>
+</body>
+</html>
