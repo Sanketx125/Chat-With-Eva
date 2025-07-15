@@ -1,6 +1,9 @@
 # 🤖 Chat with Eva – RAG-based AI PDF Assistant
 
 Chat with Eva is an AI-powered RAG-based assistant that helps you interact with your PDF documents in a conversational interface. Upload a PDF file, ask questions, and let Eva find and generate accurate answers using the document content.
+---
+
+
 
 ---
 
