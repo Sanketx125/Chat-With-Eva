@@ -50,7 +50,7 @@ Chat-with-Eva/
 
 ### 1. Clone the Repository
 
-git clone https://github.com/your-username/Chat-with-Eva.git  
+git clone https://github.com/Sanketx125/Chat-with-Eva.git  
 cd Chat-with-Eva  
 
 ### 2. Create Virtual Environment
@@ -100,14 +100,6 @@ PDF Parsing: PyMuPDF (fitz)
 Frontend: TailwindCSS + JavaScript  
 AI Pattern: Retrieval-Augmented Generation (RAG)  
 
----
-
-## 📦 requirements.txt
-
-Flask  
-Werkzeug  
-PyMuPDF  
-python-dotenv  
 
 ---
 
